@@ -2,8 +2,6 @@
 
 An opinionated extension of ArcInventory.
 
-
-
 ## Overview
 This plugins is intended to extend ArcInventory in places that ArcInventory wants to stay generalizable and minimum opinion. This plugin will be filled with opinionated decisions. 
 
@@ -32,5 +30,11 @@ This plugin is an extension of ArcInventory and therefore any core ArcInventory 
 
 [ArcInventory](https://www.fab.com/listings/ee4027dd-0a9f-4ac9-a7e6-78994f67c133) has a solid backend inspired similiar to Lyra's fragment system. 
 
+
+## Special Thanks:
+
+* namrog84
+* Wupy36
+* ArcInventory Creators (RoyAwesome)
 
 
