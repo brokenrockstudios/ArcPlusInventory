@@ -35,6 +35,6 @@ This plugin is an extension of ArcInventory and therefore any core ArcInventory 
 
 * namrog84
 * Wupy36
-* ArcInventory Creators (RoyAwesome)
+* ArcInventory Creators (RoyAwesome and PunyHuman)
 
 
