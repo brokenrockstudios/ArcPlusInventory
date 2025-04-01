@@ -1,12 +1,12 @@
-﻿// Copyright Broken Rock Studios LLC. All Rights Reserved.
+﻿// Copyright 2025 Broken Rock Studios LLC. All Rights Reserved.
+// See the LICENSE file for details.
 
-#include "ArcPlusInventoryProcessor_FixedWidthBag.h"
-#include "GameplayTagContainer.h"
-#include "NativeGameplayTags.h"
+#include "Processors/ArcPlusInventoryProcessor_FixedWidthBag.h"
 #include "ArcInventory.h"
 #include "ArcPlusGameplayTags.h"
-#include "ArcPlusLibrary.h"
-#include "ArcPlusInventoryRect.h"
+#include "GameplayTagContainer.h"
+#include "ArcPlus/Public/UI/ArcPlusItemOrientation.h"
+#include "ArcPlus/Public/UI/ArcPlusLibrary.h"
 
 UArcPlusInventoryProcessor_FixedWidthBag::UArcPlusInventoryProcessor_FixedWidthBag()
 	: bConsiderBagForLoot(true)
@@ -30,12 +30,12 @@ void UArcPlusInventoryProcessor_FixedWidthBag::OnInventoryBeginPlay_Implementati
 	// We currently assume each custom inventory slot is it's own tab
 	// But in the event we had more than 1 bag, we'd need to account for that, since each bag should have it's own tab id
 	const uint32 CurrentMaxTab = GetOwningInventory()->CustomInventorySlots.Num();
-
-	for (int32 y = 0; y < GridHeight; y++)
+	
+	for (int32 y = 0; y < BagSize.Y; y++)
 	{
-		for (int32 x = 0; x < GridWidth; x++)
+		for (int32 x = 0; x < BagSize.X; x++)
 		{
-			const uint32 SlotId = UArcPlusLibrary::PackPosition(CurrentMaxTab, x, y, 0);
+			const uint32 SlotId = UArcPlusLibrary::PackPosition(CurrentMaxTab, x, y, EArcPlusItemOrientation::DefaultOrientation);
 			const FArcInventoryItemSlotReference ProxySlot(BagSlotTags, SlotId, GetOwningInventory());
 			GetOwningInventory()->CreateInventorySlot(ProxySlot, Filter, EArcInventoryItemSlotReplicationFlags::Always);
 			BagSlots.Add(ProxySlot);
@@ -44,10 +44,15 @@ void UArcPlusInventoryProcessor_FixedWidthBag::OnInventoryBeginPlay_Implementati
 }
 
 void UArcPlusInventoryProcessor_FixedWidthBag::ProvideSlotAndWeightForLoot(
-	TMap<FArcInventoryItemSlotReference, int>& SlotScores, UArcItemStackModular* ItemStack, FGameplayTag LootTag,
-	const FArcInventoryLootPreference& Preference) const
+	TMap<FArcInventoryItemSlotReference, int>& SlotScores, UArcItemStackModular* ItemStack, FGameplayTag LootTag
+	// TODO: Update ArcInventory to latest to support
+	// ,const FArcInventoryLootPreference& Preference
+	) const
 {
-	Super::ProvideSlotAndWeightForLoot(SlotScores, ItemStack, LootTag, Preference);
+	Super::ProvideSlotAndWeightForLoot(SlotScores, ItemStack, LootTag
+		// TODO
+		//, Preference
+		);
 
 	if (bConsiderBagForLoot)
 	{
@@ -79,7 +84,7 @@ EArcItemSlotAcceptance UArcPlusInventoryProcessor_FixedWidthBag::SlotAcceptsItem
 	}
 	const FArcPlusInventoryRect ToRect = UArcPlusLibrary::MakeItemRectRef(ItemStack, ToSlot);
 	
-	if (!ToRect.IsWithinBounds(GridWidth, GridHeight))
+	if (!ToRect.IsWithinBounds(BagSize))
 	{
 		return EArcItemSlotAcceptance::No;
 	}
@@ -124,11 +129,11 @@ EArcInventoryProcessItemSlotResult UArcPlusInventoryProcessor_FixedWidthBag::Pro
 	const FArcPlusInventoryRect DestRect = UArcPlusLibrary::MakeItemRectRef(DestItem, FromSlot);
 	const FArcPlusInventoryRect SourceRect = UArcPlusLibrary::MakeItemRectRef(SourceItem, ToSlot);
 
-	if (!SourceRect.IsWithinBounds(GridWidth, GridHeight))
+	if (!SourceRect.IsWithinBounds(BagSize))
 	{
 		return EArcInventoryProcessItemSlotResult::Rejected;
 	}
-	if (!DestRect.IsWithinBounds(GridWidth, GridHeight))
+	if (!DestRect.IsWithinBounds(BagSize))
 	{
 		return EArcInventoryProcessItemSlotResult::Rejected;
 	}

@@ -1,12 +1,12 @@
-﻿// Copyright Broken Rock Studios LLC. All Rights Reserved.
+﻿// Copyright 2025 Broken Rock Studios LLC. All Rights Reserved.
+// See the LICENSE file for details.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Modular/ArcInventoryProcessor.h"
 #include "GameplayTagContainer.h"
+#include "Modular/ArcInventoryProcessor.h"
 #include "ArcPlusInventoryProcessor_FixedWidthBag.generated.h"
-
 
 // Fixed width of the bag
 // Tarkov often has '4' wide.
@@ -19,16 +19,13 @@
  * 
  */
 UCLASS()
-class ARCPLUS_API UArcPlusInventoryProcessor_FixedWidthBag : public UArcInventoryProcessor
+class ARCPLUSINVENTORY_API UArcPlusInventoryProcessor_FixedWidthBag : public UArcInventoryProcessor
 {
 	GENERATED_BODY()
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ArcPlus|Inventory")
+	FVector2D BagSize = FVector2D(4, 5);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ArcPlus|Inventory")
-	int32 GridWidth = 4;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ArcPlus|Inventory")
-	int32 GridHeight = 5;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ArcPlus|Inventory")
 	FGameplayTagContainer BagSlotTags;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ArcPlus|Inventory")
@@ -48,7 +45,10 @@ public:
 	TArray<FArcInventoryItemSlotReference> GetItemSlotReferences() const;
 
 	virtual void OnInventoryBeginPlay_Implementation() override;
-	virtual void ProvideSlotAndWeightForLoot(TMap<FArcInventoryItemSlotReference, int>& SlotScores, UArcItemStackModular* ItemStack, FGameplayTag LootTag, const FArcInventoryLootPreference& Preference) const override;
-	virtual EArcItemSlotAcceptance SlotAcceptsItem_Implementation(UArcItemStackModular* ItemStack, const FArcInventoryItemSlotReference& Slot, FArcInventoryItemSlotReference FromSlot, FGameplayTag Context) const override;
+	virtual void ProvideSlotAndWeightForLoot(TMap<FArcInventoryItemSlotReference, int>& SlotScores, UArcItemStackModular* ItemStack, FGameplayTag LootTag
+		// TODO
+		// , const FArcInventoryLootPreference& Preference
+		) const override;
+	virtual EArcItemSlotAcceptance SlotAcceptsItem_Implementation(UArcItemStackModular* ItemStack, const FArcInventoryItemSlotReference& ToSlot, FArcInventoryItemSlotReference FromSlot, FGameplayTag Context) const override;
 	virtual EArcInventoryProcessItemSlotResult ProcessItemSlotSwap_Implementation(UArcItemStackModular* SourceItem, FArcInventoryItemSlotReference FromSlot, UArcItemStackModular* DestItem, FArcInventoryItemSlotReference ToSlot, FGameplayTag Context) override;
 };

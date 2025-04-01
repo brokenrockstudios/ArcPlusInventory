@@ -1,11 +1,14 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2025 Broken Rock Studios LLC. All Rights Reserved.
+// See the LICENSE file for details.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FArcPlusModule : public IModuleInterface
+DECLARE_LOG_CATEGORY_EXTERN(LogArcPlus, Log, All)
+
+class FArcPlusInventoryModule : public IModuleInterface
 {
 public:
 

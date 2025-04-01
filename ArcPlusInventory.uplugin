@@ -1,0 +1,30 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1",
+	"FriendlyName": "ArcPlusInventory",
+	"Description": "An opinionated plugin extension of ArcInventory. To support features like item's with variable grid size like Diablo and Escape From Tarkov.",
+	"Category": "Other",
+	"CreatedBy": "Broken Rock Studios and Contributors",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ArcPlusInventory",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ArcInventory",
+			"Enabled": true
+		}
+	]
+}
