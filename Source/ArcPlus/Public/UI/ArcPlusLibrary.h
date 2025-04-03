@@ -21,13 +21,16 @@ class ARCPLUSINVENTORY_API UArcPlusLibrary : public UBlueprintFunctionLibrary
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "ArcPlus")
-	static int32 PackPosition(int32 Tab, int32 X, int32 Y, EArcPlusItemOrientation Rotation);
+	static int32 PackPosition(int32 Tab, int32 X, int32 Y, EArcPlusItemOrientation Orientation);
 
 	UFUNCTION(BlueprintCallable, Category = "ArcPlus")
-	static void UnpackPosition(int32 packedValue, int32& Tab, int32& X, int32& Y, int32& Rotation);
+	static void UnpackPosition(int32 packedValue, int32& Tab, int32& X, int32& Y, EArcPlusItemOrientation& Orientation);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ArcPlus")
 	static int32 GetTab(int32 packedValue);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ArcPlus")
+	static FVector2D GetPosition(int32 packedValue);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ArcPlus")
 	static int32 GetX(int32 packedValue);
@@ -36,11 +39,12 @@ public:
 	static int32 GetY(int32 packedValue);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ArcPlus")
-	static int32 GetRot(int32 packedValue);
+	static EArcPlusItemOrientation GetOrientation(int32 packedValue);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ArcPlus")
 	static int32 GetUnused(int32 packedValue);
 
-	static FArcPlusInventoryRect MakeItemRectRef(const UArcItemStackModular* Item, const FArcInventoryItemSlotReference& Slot);
-	static FArcPlusInventoryRect MakeItemRect(const UArcItemStackModular* Item, const FArcInventoryItemSlot& Slot);
+	static FArcPlusInventoryRect MakeItemRectRef(const UArcItemStackBase* Item, const FArcInventoryItemSlotReference& Slot);
+	static FArcPlusInventoryRect MakeItemRect(const UArcItemStackBase* Item, const FArcInventoryItemSlot& Slot);
+	static FVector2D GetItemSize(const UArcItemStackBase* Item);
 };

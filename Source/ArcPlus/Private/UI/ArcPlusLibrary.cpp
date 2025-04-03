@@ -5,6 +5,8 @@
 
 #include "ArcPlusGameplayTags.h"
 #include "ArcPlus/Public/UI/ArcPlusInventoryRect.h"
+#include "Fragments/ArcPlusItemFragment_ItemSize.h"
+#include "Grid/ArcPlusInventorySizeInterface.h"
 #include "Modular/ArcItemStackModular.h"
 
 // User-configurable bit allocations as compile-time constants
@@ -31,25 +33,25 @@ constexpr uint32 UNUSED_MASK = (1 << UNUSED_BITS) - 1;
 // Compile-time check to ensure we don't exceed 32 bits
 static_assert(TAB_BITS + X_BITS + Y_BITS + ROT_BITS + UNUSED_BITS <= 32, "Bit allocation exceeds 32 bits");
 
-int32 UArcPlusLibrary::PackPosition(int32 Tab, int32 X, int32 Y, EArcPlusItemOrientation Rotation)
+int32 UArcPlusLibrary::PackPosition(int32 Tab, int32 X, int32 Y, EArcPlusItemOrientation Orientation)
 {
 	uint32 packedValue = 0;
 	constexpr uint32 unused = 0; // Reserved for future use. 
 	packedValue |= (Tab & TAB_MASK) << TAB_SHIFT;
 	packedValue |= (X & X_MASK) << X_SHIFT;
 	packedValue |= (Y & Y_MASK) << Y_SHIFT;
-	int32 RotationValue = static_cast<int32>(Rotation);
+	const int32 RotationValue = static_cast<int32>(Orientation);
 	packedValue |= (RotationValue & ROT_MASK) << ROT_SHIFT;
 	packedValue |= (unused & UNUSED_MASK) << UNUSED_SHIFT;
 	return packedValue;
 }
 
-void UArcPlusLibrary::UnpackPosition(int32 packedValue, int32& Tab, int32& X, int32& Y, int32& Rotation)
+void UArcPlusLibrary::UnpackPosition(int32 packedValue, int32& Tab, int32& X, int32& Y, EArcPlusItemOrientation& Orientation)
 {
-	Tab = (packedValue >> TAB_SHIFT) & TAB_MASK;
-	X = (packedValue >> X_SHIFT) & X_MASK;
-	Y = (packedValue >> Y_SHIFT) & Y_MASK;
-	Rotation = (packedValue >> ROT_SHIFT) & ROT_MASK;
+	Tab = GetTab(packedValue);
+	X = GetX(packedValue);
+	Y = GetY(packedValue);
+	Orientation = GetOrientation(packedValue);
 	// Unused = (packedValue >> UNUSED_SHIFT) & UNUSED_MASK;
 }
 
@@ -57,6 +59,14 @@ int32 UArcPlusLibrary::GetTab(int32 packedValue)
 {
 	const uint32 uPackedValue = packedValue;
 	return (uPackedValue >> TAB_SHIFT) & TAB_MASK;
+}
+
+FVector2D UArcPlusLibrary::GetPosition(int32 packedValue)
+{
+	return FVector2D(
+		GetX(packedValue),
+		GetY(packedValue)
+	);
 }
 
 int32 UArcPlusLibrary::GetX(int32 packedValue)
@@ -71,10 +81,10 @@ int32 UArcPlusLibrary::GetY(int32 packedValue)
 	return (uPackedValue >> Y_SHIFT) & Y_MASK;
 }
 
-int32 UArcPlusLibrary::GetRot(int32 packedValue)
+EArcPlusItemOrientation UArcPlusLibrary::GetOrientation(int32 packedValue)
 {
 	const uint32 uPackedValue = packedValue;
-	return (uPackedValue >> ROT_SHIFT) & ROT_MASK;
+	return static_cast<EArcPlusItemOrientation>(uPackedValue >> ROT_SHIFT & ROT_MASK);
 }
 
 int32 UArcPlusLibrary::GetUnused(int32 packedValue)
@@ -83,7 +93,7 @@ int32 UArcPlusLibrary::GetUnused(int32 packedValue)
 	return (uPackedValue >> UNUSED_SHIFT) & UNUSED_MASK;
 }
 
-FArcPlusInventoryRect UArcPlusLibrary::MakeItemRectRef(const UArcItemStackModular* Item, const FArcInventoryItemSlotReference& Slot)
+FArcPlusInventoryRect UArcPlusLibrary::MakeItemRectRef(const UArcItemStackBase* Item, const FArcInventoryItemSlotReference& Slot)
 {
 	static FArcPlusInventoryRect ZeroRect = FArcPlusInventoryRect(FVector2D::ZeroVector, FVector2D::ZeroVector);
 	// More testing to see if this assumption is 'safe' or if there is a 'better' way of handling this?
@@ -96,53 +106,64 @@ FArcPlusInventoryRect UArcPlusLibrary::MakeItemRectRef(const UArcItemStackModula
 		return ZeroRect;
 	}
 
-	// A non-modular item is always assumed to be 1x1
-	FVector2D size = FVector2D::One();
-	if (Item)
+	FVector2D size = UArcPlusLibrary::GetItemSize(Item);
+	const EArcPlusItemOrientation bOrientation = UArcPlusLibrary::GetOrientation(Slot.GetSlotId());
+	if (bOrientation == EArcPlusItemOrientation::DefaultOrientation || bOrientation == EArcPlusItemOrientation::Rotated_180)
 	{
-		const int32 bRotation = UArcPlusLibrary::GetRot(Slot.GetSlotId());
-		const int32 itemHeight = Item->GetStatTagStackCount(ArcPlusGameplayTags::Inventory_Item_Size_Height);
-		const int32 itemWidth = Item->GetStatTagStackCount(ArcPlusGameplayTags::Inventory_Item_Size_Width);
-
-		// horizontal
-		if (bRotation % 2 == 0)
-		{
-			size = FVector2D(itemHeight, itemWidth);
-		}
-		else
-		{
-			size = FVector2D(itemWidth, itemHeight);
-		}
+		size = FVector2D(size.X, size.Y);
 	}
-	const FVector2D position(
-		UArcPlusLibrary::GetX(Slot.GetSlotId()),
-		UArcPlusLibrary::GetY(Slot.GetSlotId())
-	);
-
+	else
+	{
+		size = FVector2D(size.Y, size.X);
+	}
+	const FVector2D position = GetPosition(Slot.GetSlotId());
 	return FArcPlusInventoryRect(position, size);
 }
 
-FArcPlusInventoryRect UArcPlusLibrary::MakeItemRect(const UArcItemStackModular* Item, const FArcInventoryItemSlot& Slot)
+FArcPlusInventoryRect UArcPlusLibrary::MakeItemRect(const UArcItemStackBase* Item, const FArcInventoryItemSlot& Slot)
 {
-	const FVector2D position(UArcPlusLibrary::GetX(Slot.SlotId), UArcPlusLibrary::GetY(Slot.SlotId));
+	const EArcPlusItemOrientation bOrientation = UArcPlusLibrary::GetOrientation(Slot.SlotId);
 
-	// A non-modular item is always assumed to be 1x1
-	FVector2D size = FVector2D::One();
-	if (Item)
+	FVector2D size = UArcPlusLibrary::GetItemSize(Item);
+	if (bOrientation == EArcPlusItemOrientation::DefaultOrientation || bOrientation == EArcPlusItemOrientation::Rotated_180)
 	{
-		const int32 bRotation = UArcPlusLibrary::GetRot(Slot.SlotId);
-		const int32 itemHeight = Item->GetStatTagStackCount(ArcPlusGameplayTags::Inventory_Item_Size_Height);
-		const int32 itemWidth = Item->GetStatTagStackCount(ArcPlusGameplayTags::Inventory_Item_Size_Width);
-		// horizontal
-		if (bRotation % 2 == 0)
+		size = FVector2D(size.X, size.Y);
+	}
+	else
+	{
+		size = FVector2D(size.Y, size.X);
+	}
+	const FVector2D position = GetPosition(Slot.SlotId);
+	return FArcPlusInventoryRect(position, size);
+}
+
+
+FVector2D UArcPlusLibrary::GetItemSize(const UArcItemStackBase* Item)
+{
+	if (!Item)
+	{
+		return FVector2D::ZeroVector;
+	}
+	if (const IArcPlusInventorySizeInterface* InventoryInterface = Cast<IArcPlusInventorySizeInterface>(Item))
+	{
+		// HotPath A+. It's in your core item definition itself. Use this for most efficient lookup. 
+		return InventoryInterface->GetItemSize();
+	}
+	else if (const UArcItemStackModular* ModularItem = Cast<UArcItemStackModular>(Item))
+	{
+		if (ModularItem->HasStatTag(ArcPlusGameplayTags::Inventory_Item_Size_Height))
 		{
-			size = FVector2D(itemHeight, itemWidth);
+			const int32 itemHeight = ModularItem->GetStatTagStackCount(ArcPlusGameplayTags::Inventory_Item_Size_Height);
+			const int32 itemWidth = ModularItem->GetStatTagStackCount(ArcPlusGameplayTags::Inventory_Item_Size_Width);
+			return FVector2D(itemHeight, itemWidth);
 		}
-		else
+		else if (const UArcPlusItemFragment_ItemSize* ItemSizeFragment = Cast<UArcPlusItemFragment_ItemSize>(
+			ModularItem->FindFirstFragment<UArcPlusItemFragment_ItemSize>()))
 		{
-			size = FVector2D(itemWidth, itemHeight);
+			// HotPath B-. Fragments have extra 'iteration' time. Worst hot path.
+			return ItemSizeFragment->GetItemSize();
 		}
 	}
-
-	return FArcPlusInventoryRect(position, size);
+	// return 1x1 for non modular item
+	return FVector2D::One();
 }
