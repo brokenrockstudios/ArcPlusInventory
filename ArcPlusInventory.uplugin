@@ -25,6 +25,10 @@
 		{
 			"Name": "ArcInventory",
 			"Enabled": true
+		},
+		{
+			"Name": "CommonUI",
+			"Enabled": true
 		}
 	]
 }

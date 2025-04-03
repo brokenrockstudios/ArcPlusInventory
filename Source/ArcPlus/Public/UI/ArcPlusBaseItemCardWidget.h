@@ -5,9 +5,11 @@
 #include "CoreMinimal.h"
 #include "ArcInventoryItemTypes.h"
 #include "CommonUserWidget.h"
+#include "Modular/ArcInventoryComponent_Modular.h"
 
 #include "ArcPlusBaseItemCardWidget.generated.h"
 
+class UArcInventoryComponent_Modular;
 /**
  * 
  */
@@ -30,8 +32,33 @@ public:
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category="ArcPlus", BlueprintGetter=GetItemStack, Meta=(ExposeOnSpawn = true))
-	TObjectPtr<UArcItemStackBase> ItemStack;
+	TObjectPtr<UArcItemStackBase> CurrentItemStack;
 
 	UPROPERTY(BlueprintReadOnly, Category = "ArcPlus", Meta = (ExposeOnSpawn = true))
-	FArcInventoryItemSlotReference ItemSlot;
+	FArcInventoryItemSlotReference CurrentItemSlot;
+
+
+
+	// Consider moving 1 level up in a class?
+	void BindNewInventory(UArcInventoryComponent_Modular* Inventory);
+	
+	UPROPERTY(EditAnywhere, Category="Inventory")
+	FArcInventoryQuery ItemSlotQuery;
+	void RebindSlot();
+	UFUNCTION()
+	void OnInventoryEvent(UArcInventoryComponent_Modular* Inventory, FGameplayTag Tag, const FArcInventoryModularEventPayload& Payload);
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="Inventory", meta=(DisplayName="OnStatTagChanged"))
+	void K2_OnStatTagChanged(UArcItemStackModular* ItemStack, FGameplayTag StatTag, int32 NewValue, int32 OldValue);
+	void K2_OnStatTagChanged_Implementation(UArcItemStackModular* ItemStack, FGameplayTag StatTag, int32 NewValue, int32 OldValue) {}
+	
+	UFUNCTION()
+	virtual void OnStatTagChanged(UArcItemStackModular* ItemStack, FGameplayTag StatTag, int32 NewValue, int32 OldValue);
+	UFUNCTION()
+	void OnItemSlotChanged( UArcInventoryComponent* Inventory, const FArcInventoryItemSlotReference& ItemSlotRef, UArcItemStackBase* ItemStack, UArcItemStackBase* PreviousItemStack, FGameplayTag ContextTag);
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Inventory", meta=(DisplayName="UpdateItem"))
+	void K2_UpdateItem(UArcItemStackModular* itemStack);
+	void K2_UpdateItem_Implementation(UArcItemStackModular* itemStack) {}
+	
 };
