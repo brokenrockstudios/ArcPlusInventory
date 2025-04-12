@@ -1,3 +1,11 @@
+This repository is no longer being maintained.
+ArcPlusInventory was originally designed as an extension to the ArcInventory plugin, which is a paid product owned by another developer. Since its usefulness is limited to those who have purchased ArcInventory, I've decided to retire this project.
+
+Going forward, I'm focusing my efforts on building [RockInventory](https://github.com/brokenrockstudios/RockInventory) — a fully standalone, free, and open-source inventory system. It’s designed from the ground up to be flexible, performant, and independent of any third-party dependencies.
+
+
+
+
 # ArcPlusInventory
 
 An opinionated extension of ArcInventory.
